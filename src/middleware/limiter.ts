@@ -16,11 +16,18 @@ const limiterMiddleware = (req: Request, resp: Response, next) => {
           process.exit(1);
         }
         
-        redisClient.get(req.body.user_id, function(err, record) {
+        // seperator '|' should be banned in a userid, or could use user_token
+        // key example deadbeef|GET|/
+        let key = req.body.user_id + '|' + req.method + '|' +req.path;
+
+        redisClient.get(key, function(err, record) {
           if (err) throw err;
           const currentRequestTime = moment();
+
+          // record example [{\"requestTimeStamp\":1594110334,\"requestCount\":5}]
           console.log(record);
           
+          // a new request
           if (record == null) {
             let newRecord = [];
             let requestLog = {
@@ -28,7 +35,7 @@ const limiterMiddleware = (req: Request, resp: Response, next) => {
               requestCount: 1
             };
             newRecord.push(requestLog);
-            redisClient.set(req.body.user_id, JSON.stringify(newRecord));
+            redisClient.set(key, JSON.stringify(newRecord));
             next();
           } else {
             let data = JSON.parse(record);
@@ -68,7 +75,7 @@ const limiterMiddleware = (req: Request, resp: Response, next) => {
                   requestCount: 1
                 });
               }
-              redisClient.set(req.body.user_id, JSON.stringify(data));
+              redisClient.set(key, JSON.stringify(data));
               next();
             }
           }

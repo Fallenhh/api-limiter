@@ -11,10 +11,12 @@ class ResetController implements IControllerBase {
     }
 
     public initRoutes() {
-        this.router.get('/', this.index)
+        this.router.post('/', this.index)
     }
 
     index = (req: Request, res: Response) => {
+
+        console.log(req.body.user_id)
 
         const msg = {
             msg: "Password Reset Successfully"
